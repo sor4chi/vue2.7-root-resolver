@@ -2,18 +2,24 @@ const folder = Deno.args[0];
 
 const filePaths: string[] = [];
 
-const findFilesDeep = (folder: string) => {
-  const files = Deno.readDirSync(folder);
-  for (const file of files) {
+const findFilesDeep = async (findFolder: string) => {
+  const files = Deno.readDir(findFolder);
+  for await (const file of files) {
     if (file.isFile) {
-      filePaths.push(file.name);
+      if (
+        file.name.endsWith(".ts") ||
+        file.name.endsWith(".js") ||
+        file.name.endsWith(".vue")
+      ) {
+        filePaths.push(`${findFolder}/${file.name}`);
+      }
     } else {
-      findFilesDeep(file.name);
+      await findFilesDeep(`${findFolder}/${file.name}`);
     }
   }
 };
 
-findFilesDeep(folder);
+await findFilesDeep(folder);
 
 filePaths.forEach(async (filePath) => {
   const file = await Deno.readTextFile(filePath);
@@ -66,7 +72,7 @@ filePaths.forEach(async (filePath) => {
     convertedLines.splice(
       scriptTagStartIndex() + 1,
       0,
-      `import { useRoute, useRouter } from 'vue-router'`
+      `import { useRoute, useRouter } from '@/utils/router';`
     );
   }
   if (matches.router.count > 0) {
@@ -84,10 +90,16 @@ filePaths.forEach(async (filePath) => {
     );
   }
 
-  convertedLines[setupFunctionStartIndex()] = convertedLines[
-    setupFunctionStartIndex()
-  ].replace(/root,?/g, "");
+  const setupFormattedLines = convertedLines.map((line) => {
+    if (line.match(/setup\(.*\)/)) {
+      line = line.replace(/root,?/, "");
+      line = line.replace(/{ +}/, "");
+      line = line.replace(/, +\)/, ")");
+      line = line.replace(/\(_\)/, "()");
+    }
+    return line;
+  });
 
-  const newFile = convertedLines.join("\n");
+  const newFile = setupFormattedLines.join("\n");
   await Deno.writeTextFile(filePath, newFile);
 });
