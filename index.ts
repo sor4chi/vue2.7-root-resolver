@@ -73,7 +73,7 @@ filePaths.forEach(async (filePath) => {
     convertedLines.splice(
       scriptTagStartIndex() + 1,
       0,
-      `import { useRoute, useRouter } from 'vue-router';`
+      `import { useRoute, useRouter } from 'vue-router/composables';`
     );
   }
   if (matches.router.count > 0) {
