@@ -3,7 +3,8 @@ const folder = Deno.args[0];
 const filePaths: string[] = [];
 
 const findFilesDeep = async (findFolder: string) => {
-  const files = Deno.readDir(findFolder);
+  const files = Deno.readDirSync(findFolder);
+
   for await (const file of files) {
     if (file.isFile) {
       if (
@@ -72,7 +73,7 @@ filePaths.forEach(async (filePath) => {
     convertedLines.splice(
       scriptTagStartIndex() + 1,
       0,
-      `import { useRoute, useRouter } from '@/utils/router';`
+      `import { useRoute, useRouter } from 'vue-router';`
     );
   }
   if (matches.router.count > 0) {
